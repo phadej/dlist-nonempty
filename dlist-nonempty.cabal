@@ -1,0 +1,71 @@
+name:                   dlist-nonempty
+version:                0.1
+synopsis:               Non-empty difference lists
+description:
+  Difference lists are a list-like type supporting O(1) append. This is
+  particularly useful for efficient logging and pretty printing (e.g. with the
+  Writer monad), where list append quickly becomes too expensive.
+  .
+  For empty variant, see <http://hackage.haskell.org/package/dlist dlist package>.
+category:               Data
+license:                BSD3
+license-file:           LICENSE
+author:                 Don Stewart
+maintainer:             Sean Leather <sean.leather@gmail.com>
+copyright:              2006-2009 Don Stewart, 2013-2016 Sean Leather, 2017 Oleg Grenrus
+homepage:               https://github.com/phadej/dlist-nonempty
+bug-reports:            https://github.com/phadej/dlist-nonempty
+extra-source-files:     README.md
+build-type:             Simple
+cabal-version:          >= 1.9.2
+tested-with:            GHC==7.0.4
+                        GHC==7.2.2
+                        GHC==7.4.2
+                        GHC==7.6.3
+                        GHC==7.8.4
+                        GHC==7.10.3
+                        GHC==8.0.2
+
+source-repository head
+  type:                 git
+  location:             git://github.com/phadej/dlist-nonempty.git
+
+library
+  build-depends:
+                        base          >=4.3   && <4.10,
+                        base-compat   >=0.9.1 && <0.10,
+                        deepseq       >=1.1   && <2,
+                        dlist         >=0.8   && <0.9,
+                        semigroupoids >=5.1   && <5.2
+  if !impl(ghc >= 8.0)
+    build-depends:
+                        semigroups >=0.18.2 && <0.19
+  extensions:           CPP
+  exposed-modules:      Data.DList.NonEmpty
+  ghc-options:          -Wall
+
+test-suite test
+  type:                 exitcode-stdio-1.0
+  main-is:              Main.hs
+  hs-source-dirs:       tests
+  other-modules:        OverloadedStrings
+  build-depends:        dlist-nonempty,
+                        base,
+                        Cabal,
+                        QuickCheck >= 2.9 && < 2.10
+  if !impl(ghc >= 8.0)
+    build-depends:
+                        semigroups >=0.18.2 && <0.19
+
+benchmark bench
+  type:                 exitcode-stdio-1.0
+  main-is:              Main.hs
+  hs-source-dirs:       bench
+  build-depends:        base,
+                        base-compat,
+                        dlist,
+                        dlist-nonempty,
+                        criterion >= 1.1.4.0 && <1.2
+  if !impl(ghc >= 8.0)
+    build-depends:
+                        semigroups >=0.18.2 && <0.19
