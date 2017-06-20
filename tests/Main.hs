@@ -17,6 +17,7 @@ module Main (main) where
 import Prelude hiding (concat, foldr, head, map, replicate, tail)
 import qualified Data.List as List
 import Test.QuickCheck
+import Test.QuickCheck.Instances ()
 import Test.QuickCheck.Function
 
 import Data.DList.NonEmpty
@@ -29,30 +30,30 @@ import qualified Data.List.NonEmpty as NE
 
 --------------------------------------------------------------------------------
 
-eqWith :: Eq b => (a -> b) -> (a -> b) -> a -> Bool
-eqWith f g x = f x == g x
+eqWith :: (Eq b, Show b) => (a -> b) -> (a -> b) -> a -> Property
+eqWith f g x = f x === g x
 
-eqOn :: Eq b => (a -> Bool) -> (a -> b) -> (a -> b) -> a -> Property
-eqOn c f g x = c x ==> f x == g x
+eqOn :: (Eq b, Show b) => (a -> Bool) -> (a -> b) -> (a -> b) -> a -> Property
+eqOn c f g x = c x ==> f x === g x
 
 --------------------------------------------------------------------------------
 
-prop_model :: NonEmpty Int -> Bool
+prop_model :: NonEmpty Int -> Property
 prop_model = eqWith id (toNonEmpty . fromNonEmpty)
 
-prop_singleton :: Int -> Bool
+prop_singleton :: Int -> Property
 prop_singleton = eqWith (:|[]) (toNonEmpty . singleton)
 
-prop_cons :: Int -> NonEmpty Int -> Bool
+prop_cons :: Int -> NonEmpty Int -> Property
 prop_cons c = eqWith (NE.cons c) (toNonEmpty . cons c . fromNonEmpty)
 
-prop_snoc :: NonEmpty Int -> Int -> Bool
-prop_snoc xs c = xs <> [c] == toNonEmpty (snoc (fromNonEmpty xs) c)
+prop_snoc :: NonEmpty Int -> Int -> Property
+prop_snoc xs c = xs <> (c :| []) === toNonEmpty (snoc (fromNonEmpty xs) c)
 
-prop_append :: NonEmpty Int -> NonEmpty Int -> Bool
-prop_append xs ys = xs <> ys == toNonEmpty (fromNonEmpty xs `append` fromNonEmpty ys)
+prop_append :: NonEmpty Int -> NonEmpty Int -> Property
+prop_append xs ys = xs <> ys === toNonEmpty (fromNonEmpty xs `append` fromNonEmpty ys)
 
-prop_concat1 :: NonEmpty (NonEmpty Int) -> Bool
+prop_concat1 :: NonEmpty (NonEmpty Int) -> Property
 prop_concat1 = eqWith sconcat (toNonEmpty . concat1 . fmap fromNonEmpty)
 
 -- The condition reduces the size of replications and thus the eval time.
@@ -63,26 +64,26 @@ prop_replicate n =
     rep m x = x :| List.replicate (m - 1) x
 
 prop_head :: NonEmpty Int -> Property
-prop_head = eqOn (not . null) NE.head (head . fromNonEmpty)
+prop_head = eqWith NE.head (head . fromNonEmpty)
 
 prop_tail :: NonEmpty Int -> Property
-prop_tail = eqOn (not . null) NE.tail (tail . fromNonEmpty)
+prop_tail = eqWith NE.tail (tail . fromNonEmpty)
 
 prop_unfoldr :: Fun Int (Int, Maybe Int) -> Int -> Int -> Property
 prop_unfoldr (Fun _ f) n =
   eqOn (const (n >= 0)) (NE.take n . NE.unfoldr f) (NE.take n . toNonEmpty . unfoldr f)
 
-prop_map :: Fun Int Int -> NonEmpty Int -> Bool
+prop_map :: Fun Int Int -> NonEmpty Int -> Property
 prop_map (Fun _ f) = eqWith (fmap f) (toNonEmpty . map f . fromNonEmpty)
 
-prop_map_fusion :: (Int -> Int) -> (a -> Int) -> NonEmpty a -> Bool
+prop_map_fusion :: (Int -> Int) -> (a -> Int) -> NonEmpty a -> Property
 prop_map_fusion f g =
   eqWith (fmap f . fmap g) (toNonEmpty . map f . map g . fromNonEmpty)
 
-prop_show_read :: [Int] -> Bool
+prop_show_read :: [Int] -> Property
 prop_show_read = eqWith id (read . show)
 
-prop_read_show :: NonEmpty Int -> Bool
+prop_read_show :: NonEmpty Int -> Property
 prop_read_show x = eqWith id (show . f . read) $ "fromNonEmpty (" <> show x <> ")"
   where
     f :: NonEmptyDList Int -> NonEmptyDList Int
@@ -90,29 +91,29 @@ prop_read_show x = eqWith id (show . f . read) $ "fromNonEmpty (" <> show x <> "
 
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 708
 -- | Test that the IsList instance methods compile and work with simple lists
-prop_IsList :: Bool
-prop_IsList = test_fromNonEmpty [1,2,3] && test_toNonEmpty (fromNonEmpty [1,2,3])
+prop_IsList :: Property
+prop_IsList = test_fromNonEmpty [1,2,3] .&&. test_toNonEmpty (fromNonEmpty [1,2,3])
   where
-    test_fromNonEmpty, test_toNonEmpty :: NonEmptyDList Int -> Bool
-    test_fromNonEmpty x = x == fromNonEmpty [1,2,3]
-    test_toNonEmpty [1,2,3] = True
-    test_toNonEmpty _       = False
+    test_fromNonEmpty, test_toNonEmpty :: NonEmptyDList Int -> Property
+    test_fromNonEmpty x = x === fromNonEmpty [1,2,3]
+    test_toNonEmpty [1,2,3] = property True
+    test_toNonEmpty _       = property False
 
-prop_patterns :: NonEmpty Int -> Bool
+prop_patterns :: NonEmpty Int -> Property
 prop_patterns xs = case fromNonEmpty xs of
-  Cons y ys -> xs == (y:|ys)
-  _         -> False
+  Cons y ys -> xs === (y:|ys)
+  _         -> property False
 #endif
 
-prop_Semigroup_append :: NonEmpty Int -> NonEmpty Int -> Bool
-prop_Semigroup_append xs ys = xs <> ys == toNonEmpty (fromNonEmpty xs <> fromNonEmpty ys)
+prop_Semigroup_append :: NonEmpty Int -> NonEmpty Int -> Property
+prop_Semigroup_append xs ys = xs <> ys === toNonEmpty (fromNonEmpty xs <> fromNonEmpty ys)
 
-prop_Semigroup_sconcat :: NonEmpty (NonEmpty Int) -> Bool
-prop_Semigroup_sconcat xs = sconcat xs == toNonEmpty (sconcat (fmap fromNonEmpty xs))
+prop_Semigroup_sconcat :: NonEmpty (NonEmpty Int) -> Property
+prop_Semigroup_sconcat xs = sconcat xs === toNonEmpty (sconcat (fmap fromNonEmpty xs))
 
-prop_Semigroup_stimes :: Int -> NonEmpty Int -> Bool
-prop_Semigroup_stimes n xs = n < 1 ||
-    stimes n xs == toNonEmpty (stimes n (fromNonEmpty xs))
+prop_Semigroup_stimes :: Int -> NonEmpty Int -> Property
+prop_Semigroup_stimes n xs = n >=1 ==>
+    stimes n xs === toNonEmpty (stimes n (fromNonEmpty xs))
 
 --------------------------------------------------------------------------------
 
@@ -136,11 +137,9 @@ props =
   , ("IsList",            property prop_IsList)
   , ("patterns",          property prop_patterns)
 #endif
-#if MIN_VERSION_base(4,9,0)
   , ("Semigroup <>",      property prop_Semigroup_append)
   , ("Semigroup sconcat", property prop_Semigroup_sconcat)
   , ("Semigroup stimes",  property prop_Semigroup_stimes)
-#endif
   ]
 
 --------------------------------------------------------------------------------

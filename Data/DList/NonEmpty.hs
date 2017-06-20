@@ -1,7 +1,5 @@
 {-# LANGUAGE CPP #-}
-#if __GLASGOW_HASKELL__ >= 708
-{-# LANGUAGE TypeFamilies #-} -- For the IsList and IsString instances
-#endif
+{-# LANGUAGE TypeFamilies #-} -- For the IsList (uses family) and IsString (~) instances
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 708
 {-# LANGUAGE PatternSynonyms, ViewPatterns #-}
 #endif

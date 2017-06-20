@@ -6,6 +6,7 @@ import Prelude.Compat
 import Data.List (foldl')
 import Data.Foldable (toList)
 import Data.Semigroup (Semigroup (..))
+import Data.DList.Instances ()
 
 import qualified Data.List.NonEmpty as NE
 import qualified Data.DList as DList
