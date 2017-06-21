@@ -4,62 +4,19 @@
 {-# LANGUAGE PatternSynonyms, ViewPatterns #-}
 #endif
 
------------------------------------------------------------------------------
--- |
--- Module      :  Data.NonEmptyDList.NonEmpty
--- Copyright   :  (c) 2006-2009 Don Stewart, 2013-2016 Sean Leather, 2017 Oleg Grenrus
--- License     :  See LICENSE file
---
--- Maintainer  :  Oleg Grenrus <oleg.grenrus@iki.fi>
--- Stability   :  stable
--- Portability :  portable
---
--- Non-empty difference lists: a data structure for /O(1)/ append on lists.
---
------------------------------------------------------------------------------
-
-module Data.DList.NonEmpty
-#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 800
-  ( NonEmptyDList(Cons)
-#else
-  ( NonEmptyDList
-#endif
-
-  -- * Construction
-  , fromNonEmpty
-  , toNonEmpty
-  , toList
-  , toDList
-  , apply
-
-  -- * Basic functions
-  , singleton
-  , cons
-  , snoc
-  , append
-  , concat1
-  , replicate
-  , head
-  , tail
-  , unfoldr
-  , map
-
-#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 708 && __GLASGOW_HASKELL__ < 800
-  -- * Pattern Synonyms
-  , pattern Cons
-#endif
-
-  ) where
+-- | Non-empty difference lists: a data structure for /O(1)/ append on non-empty lists.
+module Data.DList.NonEmpty.Internal where
 
 import Prelude ()
 import Prelude.Compat hiding (concat, foldr, map, head, tail, replicate)
 
 import Control.DeepSeq (NFData (..))
-import Data.Function (on)
-import Data.String (IsString(..))
-import Data.List.NonEmpty (NonEmpty (..))
-import Data.Semigroup (Semigroup(..))
 import Control.Monad
+import Data.Function (on)
+import Data.List.NonEmpty (NonEmpty (..))
+import Data.Monoid (Endo (..))
+import Data.Semigroup (Semigroup(..))
+import Data.String (IsString(..))
 
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NE
@@ -88,16 +45,18 @@ import qualified GHC.Exts
 
 -- | A difference list is a function that, given a list, returns the original
 -- contents of the difference list prepended to the given list.
-newtype NonEmptyDList a = DL { unDL :: [a] -> NonEmpty a }
+--
+-- Implemented as a newtype over @[a] -> 'NonEmpty' a@.
+newtype NonEmptyDList a = NEDL { unNEDL :: [a] -> NonEmpty a }
 
 -- | Convert a list to a dlist
 fromNonEmpty :: NonEmpty a -> NonEmptyDList a
-fromNonEmpty (x :| xs) = DL $ (x :|) . (xs ++)
+fromNonEmpty (x :| xs) = NEDL $ (x :|) . (xs ++)
 {-# INLINE fromNonEmpty #-}
 
 -- | Convert a dlist to a non-empty list
 toNonEmpty :: NonEmptyDList a -> NonEmpty a
-toNonEmpty = ($[]) . unDL
+toNonEmpty = ($[]) . unNEDL
 {-# INLINE toNonEmpty #-}
 
 -- | Convert a dlist to a list
@@ -105,10 +64,20 @@ toList :: NonEmptyDList a -> [a]
 toList = NE.toList . toNonEmpty
 {-# INLINE toList #-}
 
--- | @dlist@ doesn't expose internals, so this have to go through list.
+-- | Convert to 'DList'.
+--
+-- /Note:/ @dlist@ doesn't expose internals, so this have to go through list.
 toDList :: NonEmptyDList a -> DList.DList a
 toDList = DList.fromList . toList
 {-# INLINE toDList #-}
+
+-- | Convert to representation of 'DList'.
+toEndo :: NonEmptyDList a -> Endo [a]
+toEndo ne = Endo (NE.toList . unNEDL ne)
+
+-- | Convert to representation of 'DList'.
+toEndo' :: NonEmptyDList a -> [a] -> [a]
+toEndo' = appEndo . toEndo
 
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 708
 -- | A unidirectional pattern synonym using 'toList' in a view pattern and
@@ -121,28 +90,28 @@ pattern Cons x xs <- (toNonEmpty -> x :| xs)
 
 -- | Apply a dlist to a list to get the underlying non-empty list with an extension
 apply :: NonEmptyDList a -> [a] -> NonEmpty a
-apply = unDL
+apply = unNEDL
 
 -- | Create dlist with a single element
 singleton :: a -> NonEmptyDList a
-singleton = DL . (:|)
+singleton = NEDL . (:|)
 {-# INLINE singleton #-}
 
 -- | /O(1)/. Prepend a single element to a dlist
 infixr `cons`
 cons :: a -> NonEmptyDList a -> NonEmptyDList a
-cons x xs = DL (NE.cons x . unDL xs)
+cons x xs = NEDL (NE.cons x . unNEDL xs)
 {-# INLINE cons #-}
 
 -- | /O(1)/. Append a single element to a dlist
 infixl `snoc`
 snoc :: NonEmptyDList a -> a -> NonEmptyDList a
-snoc xs x = DL (unDL xs . (x:))
+snoc xs x = NEDL (unNEDL xs . (x:))
 {-# INLINE snoc #-}
 
 -- | /O(1)/. Append dlists
 append :: NonEmptyDList a -> NonEmptyDList a -> NonEmptyDList a
-append xs ys = DL (unDL xs . NE.toList . unDL ys)
+append xs ys = NEDL (unNEDL xs . NE.toList . unNEDL ys)
 {-# INLINE append #-}
 
 -- | /O(spine)/. Concatenate dlists
@@ -152,9 +121,9 @@ concat1 = sconcat
 
 -- | /O(n)/. Create a dlist of the given number of elements.
 --
--- Always create list with at least one element.
+-- Always creates a list with at least one element.
 replicate :: Int -> a -> NonEmptyDList a
-replicate n x = DL $ \xs -> let go m | m <= 1 = x :| xs
+replicate n x = NEDL $ \xs -> let go m | m <= 1 = x :| xs
                                      | otherwise = NE.cons x $ go (m-1)
                             in go n
 {-# INLINE replicate #-}
