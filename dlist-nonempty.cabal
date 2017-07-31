@@ -1,5 +1,5 @@
 name:                   dlist-nonempty
-version:                0.1
+version:                0.1.1
 synopsis:               Non-empty difference lists
 description:
   Difference lists are a list-like type supporting O(1) append. This is
@@ -18,7 +18,7 @@ maintainer:             Oleg Grenrus <oleg.grenrus@iki.fi>
 copyright:              2006-2009 Don Stewart, 2013-2016 Sean Leather, 2017 Oleg Grenrus
 homepage:               https://github.com/phadej/dlist-nonempty
 bug-reports:            https://github.com/phadej/dlist-nonempty/issues
-extra-source-files:     README.md
+extra-source-files:     README.md CHANGELOG.md
 build-type:             Simple
 cabal-version:          >=1.10
 tested-with:
