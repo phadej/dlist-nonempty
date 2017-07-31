@@ -27,8 +27,8 @@ import qualified Data.DList as DList
 import Data.Functor.Apply (Apply (..))
 import Data.Functor.Bind (Bind (..))
 import Data.Functor.Alt (Alt (..))
-import Data.Semigroup.Foldable (Foldable1 (..))
-import Data.Semigroup.Traversable (Traversable1 (..))
+import qualified Data.Semigroup.Foldable as SF
+import qualified Data.Semigroup.Traversable as ST
 
 #ifdef __GLASGOW_HASKELL__
 
@@ -257,12 +257,15 @@ instance Semigroup (NonEmptyDList a) where
 instance Apply NonEmptyDList where (<.>) = (<*>)
 instance Bind NonEmptyDList where (>>-) = (>>=)
 
-instance Foldable1 NonEmptyDList where
-  foldMap1 f = foldMap1 f . toNonEmpty
+instance SF.Foldable1 NonEmptyDList where
+  foldMap1 f = SF.foldMap1 f . toNonEmpty
+#if MIN_VERSION_semigroupoids(5,2,1)
+  toNonEmpty = toNonEmpty
+#endif
 
-instance Traversable1 NonEmptyDList where
-  traverse1 f = fmap fromNonEmpty . traverse1 f . toNonEmpty
-  sequence1   = fmap fromNonEmpty . sequence1 . toNonEmpty
+instance ST.Traversable1 NonEmptyDList where
+  traverse1 f = fmap fromNonEmpty . ST.traverse1 f . toNonEmpty
+  sequence1   = fmap fromNonEmpty . ST.sequence1 . toNonEmpty
 
 instance Alt NonEmptyDList where
   (<!>) = append
