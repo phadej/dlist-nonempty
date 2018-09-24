@@ -1,6 +1,6 @@
 name:                   dlist-nonempty
 version:                0.1.1
-x-revision:             3
+x-revision:             4
 synopsis:               Non-empty difference lists
 description:
   Difference lists are a list-like type supporting O(1) append. This is
