@@ -24,12 +24,13 @@ import qualified Data.List.NonEmpty as NE
 import qualified Data.Foldable as F
 import qualified Data.DList as DList
 
--- semigroupoids
+#ifdef MIN_VERSION_semigroupoids
 import Data.Functor.Apply (Apply (..))
 import Data.Functor.Bind (Bind (..))
 import Data.Functor.Alt (Alt (..))
 import qualified Data.Semigroup.Foldable as SF
 import qualified Data.Semigroup.Traversable as ST
+#endif
 
 #ifdef __GLASGOW_HASKELL__
 
@@ -255,6 +256,7 @@ instance Semigroup (NonEmptyDList a) where
 -- semigroupoids
 -------------------------------------------------------------------------------
 
+#ifdef MIN_VERSION_semigroupoids
 instance Apply NonEmptyDList where (<.>) = (<*>)
 instance Bind NonEmptyDList where (>>-) = (>>=)
 
@@ -270,3 +272,4 @@ instance ST.Traversable1 NonEmptyDList where
 
 instance Alt NonEmptyDList where
   (<!>) = append
+#endif

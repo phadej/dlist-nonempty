@@ -1,2 +1,7 @@
-branches: master
+branches:   master
 benchmarks: <9
+
+constraint-set no-semigroupoids
+  constraints: dlist-nonempty -semigroupoids
+  tests:       True
+  run-tests:   True
