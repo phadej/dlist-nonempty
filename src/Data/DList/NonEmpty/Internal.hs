@@ -8,21 +8,22 @@
 -- | Non-empty difference lists: a data structure for /O(1)/ append on non-empty lists.
 module Data.DList.NonEmpty.Internal where
 
-import Prelude ()
-import Prelude.Compat hiding (concat, foldr, map, head, tail, replicate)
+import Prelude (Eq (..), Ord (..), Read (..), Show (..), showParen, showString, Int, Maybe (..), Char, otherwise, (-), ($), (.), (++), Functor (..), Monad (..))
+import Control.Applicative (Applicative (..))
+import Data.Foldable (Foldable)
+import Data.Traversable (Traversable (..))
 
 import Control.DeepSeq (NFData (..))
-import Control.Monad
+import Control.Monad (ap)
 import Data.Function (on)
 import Data.List.NonEmpty (NonEmpty (..))
-import Data.Monoid (Endo (..))
+import Data.Monoid (Endo (..), mconcat)
 import Data.Semigroup (Semigroup(..))
 import Data.String (IsString(..))
 
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Foldable as F
-import qualified Data.DList as DList
 
 #ifdef MIN_VERSION_semigroupoids
 import Data.Functor.Apply (Apply (..))
@@ -44,6 +45,9 @@ import qualified GhcIsList
 #endif
 
 #endif
+
+-- This interface can be used wrong.
+import DListUnsafe (DList(UnsafeDList))
 
 -- | A difference list is a function that, given a list, returns the original
 -- contents of the difference list prepended to the given list.
@@ -69,17 +73,19 @@ toList = NE.toList . toNonEmpty
 -- | Convert to 'DList'.
 --
 -- /Note:/ @dlist@ doesn't expose internals, so this have to go through list.
-toDList :: NonEmptyDList a -> DList.DList a
-toDList = DList.fromList . toList
+toDList :: NonEmptyDList a -> DList a
+toDList = UnsafeDList . toEndo'
 {-# INLINE toDList #-}
 
 -- | Convert to representation of 'DList'.
 toEndo :: NonEmptyDList a -> Endo [a]
-toEndo ne = Endo (NE.toList . unNEDL ne)
+toEndo = Endo . toEndo'
+{-# INLINE toEndo #-}
 
 -- | Convert to representation of 'DList'.
 toEndo' :: NonEmptyDList a -> [a] -> [a]
 toEndo' = appEndo . toEndo
+{-# INLINE toEndo' #-}
 
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 708
 -- | A unidirectional pattern synonym using 'toList' in a view pattern and
