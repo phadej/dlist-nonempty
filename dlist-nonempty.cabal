@@ -46,15 +46,22 @@ source-repository head
   type:     git
   location: git://github.com/phadej/dlist-nonempty.git
 
+flag semigroupoids
+  description: Build with semigroupoids dependency
+  manual:      True
+  default:     True
+
 library
   default-language: Haskell2010
   hs-source-dirs:   src
   build-depends:
-      base           >=4.5   && <4.18
-    , base-compat    >=0.9.1 && <0.13
-    , deepseq        >=1.1   && <2
-    , dlist          >=0.8   && <1.1
-    , semigroupoids  >=5.1   && <5.4
+      base         >=4.5     && <4.18
+    , base-compat  >=0.9.1   && <0.13
+    , deepseq      >=1.1     && <2
+    , dlist        >=0.8.0.4 && <1.1
+
+  if flag(semigroupoids)
+    build-depends: semigroupoids >=5.1 && <5.4
 
   if !impl(ghc >=8.0)
     build-depends: semigroups >=0.18.2 && <0.21
