@@ -2,6 +2,7 @@
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 708
 {-# LANGUAGE PatternSynonyms #-}
 #endif
+{-# LANGUAGE Safe #-}
 
 -- | Non-empty difference lists: a data structure for /O(1)/ append on non-empty lists.
 module Data.DList.NonEmpty

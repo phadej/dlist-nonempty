@@ -3,6 +3,7 @@
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 708
 {-# LANGUAGE PatternSynonyms, ViewPatterns #-}
 #endif
+{-# LANGUAGE Safe #-}
 
 -- | Non-empty difference lists: a data structure for /O(1)/ append on non-empty lists.
 module Data.DList.NonEmpty.Internal where
@@ -36,9 +37,9 @@ import Text.Read (Lexeme(Ident), lexP, parens, prec, readPrec, readListPrec,
                   readListPrecDefault)
 
 #if __GLASGOW_HASKELL__ >= 708
-import GHC.Exts (IsList)
 -- This is for the IsList methods, which conflict with fromList, toList:
-import qualified GHC.Exts
+import GhcIsList (IsList)
+import qualified GhcIsList
 #endif
 
 #endif
@@ -56,7 +57,7 @@ fromNonEmpty (x :| xs) = NEDL $ (x :|) . (xs ++)
 
 -- | Convert a dlist to a non-empty list
 toNonEmpty :: NonEmptyDList a -> NonEmpty a
-toNonEmpty = ($[]) . unNEDL
+toNonEmpty = ($ []) . unNEDL
 {-# INLINE toNonEmpty #-}
 
 -- | Convert a dlist to a list

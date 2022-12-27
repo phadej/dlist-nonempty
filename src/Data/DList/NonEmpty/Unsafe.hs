@@ -6,6 +6,7 @@
 -- >>> nedl <> nedl
 -- fromNonEmpty (1 :| [2])
 --
+{-# LANGUAGE Unsafe #-}
 module Data.DList.NonEmpty.Unsafe (NonEmptyDList (..)) where
 
 import Data.DList.NonEmpty.Internal

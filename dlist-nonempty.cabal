@@ -1,6 +1,5 @@
 name:               dlist-nonempty
-version:            0.1.1
-x-revision:         13
+version:            0.1.2
 synopsis:           Non-empty difference lists
 description:
   Difference lists are a list-like type supporting O(1) append. This is
@@ -23,8 +22,8 @@ copyright:
 homepage:           https://github.com/phadej/dlist-nonempty
 bug-reports:        https://github.com/phadej/dlist-nonempty/issues
 extra-source-files:
-  README.md
   CHANGELOG.md
+  README.md
 
 build-type:         Simple
 cabal-version:      >=1.10
@@ -66,6 +65,10 @@ library
     Data.DList.NonEmpty.Unsafe
 
   other-modules:    Data.DList.NonEmpty.Internal
+
+  if impl(ghc >=7.8)
+    other-modules: GhcIsList
+
   ghc-options:      -Wall
 
   if impl(ghc >=8.0)
