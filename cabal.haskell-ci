@@ -1,7 +1,19 @@
 branches:   master
-benchmarks: <9
+benchmarks: True
 
 constraint-set no-semigroupoids
   constraints: dlist-nonempty -semigroupoids
+  tests:       True
+  run-tests:   True
+
+constraint-set semigroupoids-6
+  constraints: semigroupoids >=6
+  ghc:         >=8
+  tests:       True
+  run-tests:   True
+
+constraint-set semigroupoids-5
+  constraints: semigroupoids <6
+  ghc:         <9.6
   tests:       True
   run-tests:   True

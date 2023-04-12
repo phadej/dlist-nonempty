@@ -1,3 +1,9 @@
+0.1.3
+-----
+
+- Use `foldable1-classes-compat` in additional to (old) `semigroupoids`
+  as `Foldable1` provider.
+
 0.1.2
 -----
 

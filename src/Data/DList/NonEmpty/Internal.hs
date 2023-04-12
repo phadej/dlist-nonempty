@@ -24,13 +24,17 @@ import Data.String (IsString(..))
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Foldable as F
+import qualified Data.Foldable1 as F1
 
 #ifdef MIN_VERSION_semigroupoids
 import Data.Functor.Apply (Apply (..))
 import Data.Functor.Bind (Bind (..))
 import Data.Functor.Alt (Alt (..))
-import qualified Data.Semigroup.Foldable as SF
 import qualified Data.Semigroup.Traversable as ST
+
+#if !MIN_VERSION_semigroupoids(6,0,0)
+import qualified Data.Semigroup.Foldable as SF
+#endif
 #endif
 
 #ifdef __GLASGOW_HASKELL__
@@ -259,6 +263,14 @@ instance Semigroup (NonEmptyDList a) where
   {-# INLINE (<>) #-}
 
 -------------------------------------------------------------------------------
+-- foldable1
+-------------------------------------------------------------------------------
+
+instance F1.Foldable1 NonEmptyDList where
+  foldMap1 f = F1.foldMap1 f . toNonEmpty
+  toNonEmpty = toNonEmpty
+
+-------------------------------------------------------------------------------
 -- semigroupoids
 -------------------------------------------------------------------------------
 
@@ -266,15 +278,15 @@ instance Semigroup (NonEmptyDList a) where
 instance Apply NonEmptyDList where (<.>) = (<*>)
 instance Bind NonEmptyDList where (>>-) = (>>=)
 
-instance SF.Foldable1 NonEmptyDList where
-  foldMap1 f = SF.foldMap1 f . toNonEmpty
-#if MIN_VERSION_semigroupoids(5,2,1)
-  toNonEmpty = toNonEmpty
-#endif
-
 instance ST.Traversable1 NonEmptyDList where
   traverse1 f = fmap fromNonEmpty . ST.traverse1 f . toNonEmpty
   sequence1   = fmap fromNonEmpty . ST.sequence1 . toNonEmpty
+
+#if !MIN_VERSION_semigroupoids(6,0,0)
+instance SF.Foldable1 NonEmptyDList where
+  foldMap1 = F1.foldMap1
+  toNonEmpty = toNonEmpty
+#endif
 
 instance Alt NonEmptyDList where
   (<!>) = append
